@@ -20,11 +20,6 @@ This is a responsive web application that allows users to search for images and 
 
 🚀 Getting Started
 1. Clone the Repository
-bash
-Copy
-Edit
-git clone https://github.com/yourusername/pixabay-media-search.git
-cd pixabay-media-search
 2. Open in Your Browser
 You can open index.html directly in your browser:
 
