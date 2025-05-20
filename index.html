@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixabay Media Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0d0d0d;
+            color: #e0e0e0;
+            text-align: center;
+            padding: 30px;
+            margin: 0;
+            position: relative;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        body.light-mode {
+            background: #f0f8ff;
+            color: #222;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #ececec;
+            transition: transform 0.3s;
+        }
+
+        body.light-mode h1 {
+            color: #0077b6;
+        }
+
+        .controls {
+            margin: 20px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 600px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            outline: none;
+            transition: box-shadow 0.3s, background-color 0.3s, color 0.3s;
+        }
+
+        input,
+        select {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #d9d9d9;
+            box-shadow: 0 0 4px #ffffff;
+        }
+
+        body.light-mode input,
+        body.light-mode select {
+            background-color: #fff;
+            color: #222;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 8px #0077b8;
+        }
+
+        button {
+            background-color: #0077b8;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        body.light-mode button {
+            background-color: #005f8e;
+            color: white;
+        }
+
+        body.light-mode button:hover {
+            background-color: #0077b6;
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6);
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .media-card {
+            position: relative;
+            width: 300px;
+            background: #121212;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 191, 255, 0.3);
+            transition: box-shadow 0.3s ease, width 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .media-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 191, 255, 0.5);
+        }
+
+        body.light-mode .media-card {
+            background: #e3f2fd;
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+            color: #222;
+        }
+
+        .gallery img,
+        .gallery video {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+            user-select: none;
+        }
+
+        .gallery img:hover,
+        .gallery video:hover {
+            transform: scale(1.05);
+        }
+
+        .media-info {
+            margin-top: 8px;
+            color: #00bfff;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        body.light-mode .media-info {
+            color: #005f8e;
+        }
+
+        .download-btn {
+            margin-top: 8px;
+            padding: 10px 0;
+            width: calc(100% - 20px);
+            background-color: #0077b6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #005f8e;
+        }
+
+        .media-card.active .download-btn {
+            opacity: 1;
+            max-height: 40px;
+        }
+
+        .media-card.active {
+            width: 320px;
+            box-shadow: 0 8px 30px rgba(0, 191, 255, 0.5);
+        }
+
+        .media-card:hover .download-btn {
+            display: inline-block;
+        }
+
+        .loader {
+            display: none;
+            border: 8px solid #0d0d0d;
+            border-top: 8px solid #00bfff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pagination {
+            margin-top: 25px;
+        }
+
+        .pagination button {
+            margin: 5px;
+            background-color: #0077b6;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .pagination button[disabled] {
+            background-color: #555 !important;
+            cursor: not-allowed;
+        }
+
+        .pagination button:hover:not([disabled]) {
+            background-color: #00bfff;
+        }
+
+        .dark-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #0077b6;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            z-index: 1000;
+        }
+
+        .dark-toggle:hover {
+            background: #00bfff;
+        }
+
+        #errorMsg {
+            color: #ff4b2b;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 1.5em;
+        }
+
+        @media (max-width: 600px) {
+            input {
+                width: 100%;
+            }
+
+            .media-card {
+                width: 100%;
+            }
+
+            .controls {
+                max-width: 100%;
+            }
+        }
+
+        #imageModal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        #imageModal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00bfff;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="dark-toggle" aria-label="Toggle Dark Mode" onclick="toggleDarkMode()"><i class="fas fa-moon"></i>
+        Toggle Dark Mode</button>
+    <h1><i class="fas fa-search" aria-hidden="true"></i> Pixabay Media Search</h1>
+
+    <div class="controls" role="search" aria-label="Search Pixabay media">
+        <input type="text" id="query" placeholder="Search for images or videos..." aria-label="Search query"
+            onkeydown="handleKey(event)" />
+        <select id="type" aria-label="Select media type">
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+        </select>
+        <button onclick="searchMedia()" aria-label="Search"><i class="fas fa-search"></i> Search</button>
+    </div>
+
+    <div class="loader" id="loader" aria-hidden="true"></div>
+    <div class="gallery" id="gallery" role="list"></div>
+    <div id="errorMsg" role="alert" aria-live="assertive"></div>
+
+    <div class="pagination" role="navigation" aria-label="Pagination controls">
+        <button id="prevBtn" onclick="changePage(-1)" aria-label="Previous page"> <i class="fas fa-arrow-left"></i>
+            Previous</button>
+        <button id="nextBtn" onclick="changePage(1)" aria-label="Next page">Next <i
+                class="fas fa-arrow-right"></i></button>
+    </div>
+
+    <div id="imageModal" onclick="closeModal()" role="dialog" aria-modal="true" aria-label="Image preview modal">
+        <img src="" alt="Preview image" />
+    </div>
+
+    <script>
+        const apiKey = 'YOUR_PIXABAY_API_KEY';
+        let currentPage = 1;
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.querySelector('.dark-toggle i');
+            if (document.body.classList.contains('light-mode')) {
+                btn.classList.remove('fa-moon');
+                btn.classList.add('fa-sun');
+            } else {
+                btn.classList.remove('fa-sun');
+                btn.classList.add('fa-moon');
+            }
+        }
+
+        function handleKey(event) {
+            if (event.key === 'Enter') {
+                searchMedia();
+            }
+        }
+
+        function clearDownloadButtons() {
+            document.querySelectorAll('.download-btn').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
+
+        async function searchMedia() {
+            clearDownloadButtons();
+            const query = document.getElementById('query').value.trim();
+            const type = document.getElementById('type').value;
+            const loader = document.getElementById('loader');
+            const gallery = document.getElementById('gallery');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!query) {
+                errorMsg.textContent = 'Please enter a search term.';
+                return;
+            }
+
+            errorMsg.textContent = '';
+            loader.style.display = 'block';
+            gallery.innerHTML = '';
+
+            const url = `https://pixabay.com/api/${type === 'video' ? 'videos' : ''}/?key=${apiKey}&q=${encodeURIComponent(query)}&page=${currentPage}&per_page=9`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                loader.style.display = 'none';
+                if (!data.hits || data.hits.length === 0) {
+                    errorMsg.textContent = `No results found for "${query}". Try a different keyword.`;
+                    return;
+                }
+
+                displayResults(data.hits, type);
+                updatePaginationButtons(data.totalHits);
+            } catch (error) {
+                loader.style.display = 'none';
+                errorMsg.textContent = 'An error occurred while fetching data. Please try again later.';
+                console.error('Error fetching Pixabay data:', error);
+            }
+        }
+
+        function displayResults(items, type) {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'media-card';
+                card.setAttribute('role', 'listitem');
+
+                if (type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = item.webformatURL;
+                    img.alt = item.tags || 'Pixabay image';
+                    img.loading = 'lazy';
+                    img.tabIndex = 0;
+
+                    img.addEventListener('click', () => {
+                        toggleActiveCard(card);
+                        openModal(item.largeImageURL, item.tags);
+                    });
+
+                    img.addEventListener('keydown', e => {
+                        if (e.key === 'Enter') {
+                            toggleActiveCard(card);
+                            openModal(item.largeImageURL, item.tags);
+                        }
+                    });
+
+                    card.appendChild(img);
+
+                    const info = document.createElement('div');
+                    info.className = 'media-info';
+                    info.textContent = `Dimensions: ${item.imageWidth}×${item.imageHeight}`;
+                    card.appendChild(info);
+
+                    const downloadBtn = document.createElement('a');
+                    downloadBtn.className = 'download-btn';
+                    downloadBtn.href = item.largeImageURL;
+                    downloadBtn.target = '_blank';
+                    downloadBtn.rel = 'noopener noreferrer';
+                    downloadBtn.download = '';
+                    downloadBtn.textContent = 'Download';
+                    downloadBtn.setAttribute('aria-label', `Download image: ${item.tags}`);
+                    card.appendChild(downloadBtn);
+                } else if (type === 'video') {
+                    const video = document.createElement('video');
+                    video.src = item.videos.medium.url;
+                    video.controls = true;
+                    video.preload = 'none';
+                    video.width = 300;
+                    video.height = 180;
+                    video.loading = 'lazy';
+                    card.appendChild(video);
+
+                    const info = document.createElement('div');
+                    info.className = 'media-info';
+                    info.textContent = `Dimensions: ${video.videoWidth || 640}×${video.videoHeight || 360}`;
+                    card.appendChild(info);
+
+                    const downloadBtn = document.createElement('a');
+                    downloadBtn.className = 'download-btn';
+                    downloadBtn.href = item.videos.medium.url;
+                    downloadBtn.target = '_blank';
+                    downloadBtn.rel = 'noopener noreferrer';
+                    downloadBtn.download = '';
+                    downloadBtn.textContent = 'Download';
+                    downloadBtn.setAttribute('aria-label', `Download video`);
+                    card.appendChild(downloadBtn);
+                }
+
+                gallery.appendChild(card);
+            });
+        }
+
+        function toggleActiveCard(selectedCard) {
+            const cards = document.querySelectorAll('.media-card');
+            cards.forEach(card => {
+                if (card === selectedCard) {
+                    card.classList.toggle('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+        }
+
+        function updatePaginationButtons(totalHits) {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const perPage = 9;
+            const totalPages = Math.ceil(totalHits / perPage);
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            if (currentPage < 1) currentPage = 1;
+            searchMedia();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openModal(imgUrl, altText) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = modal.querySelector('img');
+            modalImg.src = imgUrl;
+            modalImg.alt = altText || 'Preview image';
+            modal.style.display = 'flex';
+            modal.focus();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            const modalImg = modal.querySelector('img');
+            modalImg.src = '';
+            modalImg.alt = '';
+        }
+
+        window.addEventListener('keydown', e => {
+            const modal = document.getElementById('imageModal');
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+
+</html>
